@@ -68,7 +68,7 @@ func CheckGCSafePoint(ctx context.Context, pdClient pd.Client, ts uint64) error 
 		return nil
 	}
 	if ts <= safePoint {
-		return errors.Annotatef(berrors.ErrBackupGCSafepointExceeded, "GC safepoint %d exceed TS %d", safePoint, ts)
+		log.Error("GC safepoint exceeds TS", zap.Uint64("gcSafePoint", safePoint), zap.Uint64("ts", ts))
 	}
 	return nil
 }
