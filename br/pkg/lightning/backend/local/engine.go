@@ -138,6 +138,7 @@ type Engine struct {
 
 func (e *Engine) setError(err error) {
 	if err != nil {
+		log.L().Debug("local engine set error", zap.Stringer("engine", e.UUID), log.ShortError(err), zap.Stack("stack"))
 		e.ingestErr.Set(err)
 		e.cancel()
 	}
@@ -809,22 +810,27 @@ func (e *Engine) flushLocalWriters(parentCtx context.Context) error {
 
 func (e *Engine) flushEngineWithoutLock(ctx context.Context) error {
 	if err := e.flushLocalWriters(ctx); err != nil {
+		log.L().Debug("DEBUG flushEngineWithoutLock: flushLocalWriters error", zap.Stringer("engine", e.UUID), log.ShortError(err))
 		return err
 	}
 	flushChan := make(chan struct{}, 1)
 	select {
 	case e.sstMetasChan <- metaOrFlush{flushCh: flushChan}:
 	case <-ctx.Done():
+		log.L().Debug("DEBUG flushEngineWithoutLock: sstMetasChan ctx done", zap.Stringer("engine", e.UUID))
 		return ctx.Err()
 	case <-e.ctx.Done():
+		log.L().Debug("DEBUG flushEngineWithoutLock: sstMetasChan e.ctx done", zap.Stringer("engine", e.UUID))
 		return e.ctx.Err()
 	}
 
 	select {
 	case <-flushChan:
 	case <-ctx.Done():
+		log.L().Debug("DEBUG flushEngineWithoutLock: flushChan ctx done", zap.Stringer("engine", e.UUID))
 		return ctx.Err()
 	case <-e.ctx.Done():
+		log.L().Debug("DEBUG flushEngineWithoutLock: flushChan e.ctx done", zap.Stringer("engine", e.UUID))
 		return e.ctx.Err()
 	}
 	if err := e.ingestErr.Get(); err != nil {
@@ -842,8 +848,10 @@ func (e *Engine) flushEngineWithoutLock(ctx context.Context) error {
 	case <-flushFinishedCh:
 		return nil
 	case <-ctx.Done():
+		log.L().Debug("DEBUG flushEngineWithoutLock: flushFinishedCh ctx done", zap.Stringer("engine", e.UUID))
 		return ctx.Err()
 	case <-e.ctx.Done():
+		log.L().Debug("DEBUG flushEngineWithoutLock: flushFinishedCh e.ctx done", zap.Stringer("engine", e.UUID))
 		return e.ctx.Err()
 	}
 }
