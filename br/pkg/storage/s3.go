@@ -320,7 +320,7 @@ func NewS3Storage(backend *backuppb.S3, opts *ExternalStorageOptions) (obj *S3St
 	if cred != nil {
 		awsConfig.WithCredentials(cred)
 	}
-	// awsConfig.WithLogLevel(aws.LogDebugWithSigning)
+	awsConfig.WithLogLevel(aws.LogDebugWithSigning | aws.LogDebugWithRequestRetries | aws.LogDebugWithRequestErrors)
 	awsSessionOpts := session.Options{
 		Config: *awsConfig,
 	}
