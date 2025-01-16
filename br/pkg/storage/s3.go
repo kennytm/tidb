@@ -515,6 +515,10 @@ func (rs *S3Storage) WriteFile(ctx context.Context, file string, data []byte) er
 
 // ReadFile reads the file from the storage and returns the contents.
 func (rs *S3Storage) ReadFile(ctx context.Context, file string) ([]byte, error) {
+	stop := context.AfterFunc(ctx, func() {
+		log.Error("===> READ FILE CONTEXT CANCELED <===", zap.String("file", file), zap.Error(ctx.Err()))
+	})
+	defer stop()
 	input := &s3.GetObjectInput{
 		Bucket: aws.String(rs.options.Bucket),
 		Key:    aws.String(rs.options.Prefix + file),
